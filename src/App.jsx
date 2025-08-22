@@ -178,6 +178,49 @@ const App = () => {
   };
 
   /**
+   * Formats a date string to a long date format (e.g., "Viernes 22 de agosto de 2025, 4:17 p.m.").
+   * @param {string} dateString - The date in 'DD-MMM-YYYY' format.
+   * @returns {string} - The formatted long date string.
+   */
+  const formatLongDateForPrint = (dateString) => {
+    if (!dateString) return '';
+    
+    // Attempt to parse DD-MMM-YYYY first
+    const parts = dateString.split('-');
+    let date;
+    if (parts.length === 3) {
+        const [day, monthStr, year] = parts;
+        const monthNamesMap = {
+            'ene': 0, 'feb': 1, 'mar': 2, 'abr': 3, 'may': 4, 'jun': 5,
+            'jul': 6, 'ago': 7, 'sep': 8, 'oct': 9, 'nov': 10, 'dic': 11
+        };
+        const monthIndex = monthNamesMap[monthStr.toLowerCase()];
+        if (monthIndex !== undefined) {
+            date = new Date(year, monthIndex, day);
+        }
+    }
+    
+    // Fallback to default Date parsing if DD-MMM-YYYY failed or was not the format
+    if (!date || isNaN(date.getTime())) {
+        date = new Date(dateString);
+    }
+
+    if (isNaN(date.getTime())) return dateString; // Invalid date string
+
+    const options = { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric', 
+        hour: 'numeric', 
+        minute: 'numeric', 
+        hour12: true 
+    };
+    return date.toLocaleDateString('es-ES', options);
+  };
+
+
+  /**
    * Handles date input in 'DD-MMM-YYYY' format.
    * @param {object} e - The event object from the input.
    */
@@ -304,6 +347,18 @@ const App = () => {
 
     const iframeDoc = iframe.contentWindow.document;
 
+    // Get the current date and time for the print header
+    const now = new Date();
+    const printDateTime = now.toLocaleDateString('es-ES', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: true
+    });
+
     // We now only copy the innerHTML of #printable-content, which already contains
     // the ratio guide and final disclaimer.
     const combinedPrintContent = printableContent.innerHTML;
@@ -314,7 +369,7 @@ const App = () => {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Informe de Salud Financiera</title>
+        <title>Informe de Salud Financiera - © 2025 @Fermoon™. Derechos reservados.</title>
         <style>
           /* Basic print styles for the iframe */
           body {
@@ -323,6 +378,25 @@ const App = () => {
             background-color: white !important;
             color: black !important;
           }
+          /* Custom header for print */
+          @page {
+            @top-center {
+              content: "Informe de Salud Financiera - © 2025 @Fermoon™. Derechos reservados.";
+              font-size: 10pt;
+              color: black;
+            }
+            @bottom-center {
+              content: "${printDateTime}"; /* Dynamic date/time in footer */
+              font-size: 8pt;
+              color: black;
+            }
+            margin: 20mm; /* Ensure content starts below header */
+          }
+          /* Hide the default header/footer if any from browser */
+          header, footer {
+            display: none !important;
+          }
+
           #printable-content {
             width: 100%;
             padding: 0;
@@ -685,13 +759,15 @@ const App = () => {
                   <li><span className="font-bold">{'>'} 0.90:</span> Pésimo 🚨</li>
                 </ul>
               </div>
-              {/* This specific note was causing duplication, it's now removed from here */}
+              <p className="mt-4 text-gray-500">
+                *Nota: Estos rangos son guías generales. La interpretación precisa debe considerar la industria y las tendencias históricas de la empresa.
+              </p>
             </div>
 
             {/* Combined Disclaimer and Creator Info at the very end - Now always rendered inside printable-content */}
             <div id="final-disclaimer-section" className="mt-8 text-xs text-gray-400 text-center final-disclaimer">
               <p>
-                *Nota: {fullDisclaimerText}
+                *{fullDisclaimerText}
               </p>
               <p className="mt-2 text-center text-gray-500">
                 © 2025 @Fermoon™
