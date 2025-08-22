@@ -287,65 +287,113 @@ const App = () => {
   };
 
   /**
-   * Handles printing the report.
-   * Now relies solely on CSS media queries for print styling.
+   * Handles printing the report using an iframe to ensure content is rendered.
    */
   const handlePrint = () => {
-    window.print();
+    const printableContent = document.getElementById('printable-content');
+    if (!printableContent) {
+      console.error('No se encontró el elemento #printable-content para imprimir.');
+      return;
+    }
+
+    // Create a hidden iframe
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+
+    const iframeDoc = iframe.contentWindow.document;
+
+    // Copy the content to be printed into the iframe
+    iframeDoc.open();
+    iframeDoc.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Informe de Salud Financiera</title>
+        <style>
+          /* Basic print styles for the iframe */
+          body {
+            font-family: sans-serif;
+            margin: 20mm; /* Standard margin for print */
+            background-color: white !important;
+            color: black !important;
+          }
+          #printable-content {
+            width: 100%;
+            padding: 0;
+            box-shadow: none;
+            background-color: white !important;
+            color: black !important;
+          }
+          #printable-content * {
+            color: black !important;
+            background-color: transparent !important;
+            box-shadow: none !important;
+            text-shadow: none !important;
+            border-color: #ccc !important;
+          }
+          h1, h2, h3, p, ul, li, span {
+            color: black !important;
+          }
+          .flex.justify-center.mb-4.print-only { /* Ensure logo is centered */
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1rem;
+          }
+          .text-center {
+            text-align: center;
+          }
+          .mb-4 { margin-bottom: 1rem; }
+          .mt-2 { margin-top: 0.5rem; }
+          .mt-8 { margin-top: 2rem; }
+          .pt-6 { padding-top: 1.5rem; }
+          .border-t { border-top: 1px solid #ccc; }
+          .font-bold { font-weight: bold; }
+          .font-semibold { font-weight: 600; }
+          .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+          .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+          .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+          .text-base { font-size: 1rem; line-height: 1.5rem; }
+          .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+          .text-xs { font-size: 0.75rem; line-height: 1rem; }
+          .rounded-full { border-radius: 9999px; }
+          .bg-teal-600 { background-color: #0D9488; } /* Tailwind teal-600 */
+          .text-teal-400 { color: #2DD4BF; } /* Tailwind teal-400 */
+          .text-teal-300 { color: #5EEAD4; } /* Tailwind teal-300 */
+          .text-gray-200 { color: #E5E7EB; } /* Tailwind gray-200 */
+          .text-gray-300 { color: #D1D5DB; } /* Tailwind gray-300 */
+          .text-gray-400 { color: #9CA3AF; } /* Tailwind gray-400 */
+          .text-gray-500 { color: #6B7280; } /* Tailwind gray-500 */
+          .list-disc { list-style-type: disc; }
+          .list-inside { list-style-position: inside; }
+          .ml-2 { margin-left: 0.5rem; }
+        </style>
+      </head>
+      <body>
+        ${printableContent.innerHTML}
+      </body>
+      </html>
+    `);
+    iframeDoc.close();
+
+    // Wait for content to load, then print
+    iframe.contentWindow.onload = () => {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+      document.body.removeChild(iframe); // Remove iframe after printing
+    };
   };
 
   const currencySymbol = getCurrencySymbol(selectedCurrency);
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 flex items-center justify-center p-4 sm:p-6 lg:p-8">
-      {/* All print-specific CSS is now within this style block using @media print */}
+      {/* The main style block is now only for screen view, print styles are injected into iframe */}
       <style>
         {`
         /* Hide print-only elements by default on screen view */
         .print-only {
           display: none;
-        }
-
-        @media print {
-          /* Hide everything outside the main printable content area */
-          body > #root > div > div:not(#printable-content) {
-            display: none;
-          }
-          /* Ensure printable content is visible and styled for print */
-          #printable-content {
-            display: block !important;
-            width: 100%;
-            margin: 0;
-            padding: 0;
-            box-shadow: none;
-            background-color: white;
-            color: black; /* Default text color for print */
-          }
-          /* Universal rule for all elements inside printable-content to ensure visibility and black text */
-          #printable-content * {
-            color: black !important;
-            background-color: transparent !important; /* Ensure no dark backgrounds */
-            box-shadow: none !important; /* Remove any shadows */
-            text-shadow: none !important; /* Remove any text shadows */
-          }
-          /* Force specific text elements to black for readability on white background */
-          #printable-content h1, #printable-content h2, #printable-content h3, #printable-content p, #printable-content ul, #printable-content li, #printable-content span {
-            color: black !important;
-          }
-          /* Hide elements explicitly marked to be hidden on print */
-          .hide-on-print {
-            display: none !important;
-          }
-          /* Show elements explicitly marked to be shown only on print */
-          .print-only {
-            display: block !important;
-          }
-          /* Ensure the final combined disclaimer is visible during print */
-          .final-disclaimer {
-            display: block !important;
-            color: black !important; /* Force black text for print */
-            margin-top: 2rem; /* Add some space from the ratios guide */
-          }
         }
         `}
       </style>
