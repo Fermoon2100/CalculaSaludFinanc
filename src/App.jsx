@@ -100,7 +100,7 @@ const App = () => {
    */
   const getDebtToAssetsInterpretation = (ratio) => {
     if (typeof ratio !== 'number' || isNaN(ratio)) return '';
-    if (ratio < 0.30) return 'Excelente �';
+    if (ratio < 0.30) return 'Excelente 🚀';
     if (ratio >= 0.30 && ratio <= 0.50) return 'Bueno 👍';
     if (ratio > 0.50 && ratio <= 0.70) return 'Regular 😐';
     if (ratio > 0.70 && ratio <= 0.90) return 'Malo 🚩';
@@ -320,6 +320,13 @@ const App = () => {
             box-shadow: none;
             background-color: white;
             color: black; /* Default text color for print */
+          }
+          /* Universal rule for all elements inside printable-content to ensure visibility and black text */
+          #printable-content * {
+            color: black !important;
+            background-color: transparent !important; /* Ensure no dark backgrounds */
+            box-shadow: none !important; /* Remove any shadows */
+            text-shadow: none !important; /* Remove any text shadows */
           }
           /* Force specific text elements to black for readability on white background */
           #printable-content h1, #printable-content h2, #printable-content h3, #printable-content p, #printable-content ul, #printable-content li, #printable-content span {
