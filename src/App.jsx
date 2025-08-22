@@ -100,7 +100,7 @@ const App = () => {
    */
   const getDebtToAssetsInterpretation = (ratio) => {
     if (typeof ratio !== 'number' || isNaN(ratio)) return '';
-    if (ratio < 0.30) return 'Excelente 🚀';
+    if (ratio < 0.30) return 'Excelente �';
     if (ratio >= 0.30 && ratio <= 0.50) return 'Bueno 👍';
     if (ratio > 0.50 && ratio <= 0.70) return 'Regular 😐';
     if (ratio > 0.70 && ratio <= 0.90) return 'Malo 🚩';
@@ -288,60 +288,57 @@ const App = () => {
 
   /**
    * Handles printing the report.
+   * Now relies solely on CSS media queries for print styling.
    */
   const handlePrint = () => {
-    // Create a temporary style element for print-specific CSS
-    const printStyle = document.createElement('style');
-    printStyle.innerHTML = `
-      @media print {
-        body > #root > div > div:not(#printable-content) {
-          display: none;
-        }
-        #printable-content {
-          display: block !important;
-          width: 100%;
-          margin: 0;
-          padding: 0;
-          box-shadow: none;
-          background-color: white;
-          color: black;
-        }
-        #printable-content h1, #printable-content h2, #printable-content h3, #printable-content p, #printable-content ul, #printable-content li, #printable-content span {
-          color: black !important;
-        }
-        /* Ensure that the final combined disclaimer is visible during print */
-        .final-disclaimer {
-          display: block !important;
-          color: black !important; /* Force black text for print */
-          margin-top: 2rem; /* Add some space from the ratios guide */
-        }
-        .hide-on-print {
-          display: none !important;
-        }
-        /* Ensure elements meant only for print (like logo/title inside report) are shown */
-        .print-only {
-          display: block !important;
-        }
-      }
-    `;
-    document.head.appendChild(printStyle);
-
     window.print();
-
-    // Remove the temporary style element after printing
-    document.head.removeChild(printStyle);
   };
-
 
   const currencySymbol = getCurrencySymbol(selectedCurrency);
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 flex items-center justify-center p-4 sm:p-6 lg:p-8">
+      {/* All print-specific CSS is now within this style block using @media print */}
       <style>
         {`
         /* Hide print-only elements by default on screen view */
         .print-only {
           display: none;
+        }
+
+        @media print {
+          /* Hide everything outside the main printable content area */
+          body > #root > div > div:not(#printable-content) {
+            display: none;
+          }
+          /* Ensure printable content is visible and styled for print */
+          #printable-content {
+            display: block !important;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            box-shadow: none;
+            background-color: white;
+            color: black; /* Default text color for print */
+          }
+          /* Force specific text elements to black for readability on white background */
+          #printable-content h1, #printable-content h2, #printable-content h3, #printable-content p, #printable-content ul, #printable-content li, #printable-content span {
+            color: black !important;
+          }
+          /* Hide elements explicitly marked to be hidden on print */
+          .hide-on-print {
+            display: none !important;
+          }
+          /* Show elements explicitly marked to be shown only on print */
+          .print-only {
+            display: block !important;
+          }
+          /* Ensure the final combined disclaimer is visible during print */
+          .final-disclaimer {
+            display: block !important;
+            color: black !important; /* Force black text for print */
+            margin-top: 2rem; /* Add some space from the ratios guide */
+          }
         }
         `}
       </style>
@@ -397,7 +394,7 @@ const App = () => {
             <option value="INR">Rupia India (INR)</option>
             <option value="BRL">Real Brasileño (BRL)</option>
             <option value="RUB">Rublo Ruso (RUB)</option>
-            <option value="ZAR">Rand Sudafricano (R)</option> {/* Corrected symbol for ZAR */}
+            <option value="ZAR">Rand Sudafricano (R)</option>
           </select>
         </div>
 
