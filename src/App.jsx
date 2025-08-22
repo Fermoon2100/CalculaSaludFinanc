@@ -685,15 +685,13 @@ const App = () => {
                   <li><span className="font-bold">{'>'} 0.90:</span> Pésimo 🚨</li>
                 </ul>
               </div>
-              <p className="mt-4 text-gray-500">
-                *Nota: Estos rangos son guías generales. La interpretación precisa debe considerar la industria y las tendencias históricas de la empresa.
-              </p>
+              {/* This specific note was causing duplication, it's now removed from here */}
             </div>
 
             {/* Combined Disclaimer and Creator Info at the very end - Now always rendered inside printable-content */}
             <div id="final-disclaimer-section" className="mt-8 text-xs text-gray-400 text-center final-disclaimer">
               <p>
-                *{fullDisclaimerText}
+                *Nota: {fullDisclaimerText}
               </p>
               <p className="mt-2 text-center text-gray-500">
                 © 2025 @Fermoon™
