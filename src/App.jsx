@@ -25,7 +25,7 @@ const App = () => {
   const [error, setError] = useState('');
 
   // Full disclaimer text
-  const fullDisclaimerText = "Estos rangos son guías generales. La interpretación precisa debe considerar la industria y las tendencias históricas de la empresa. El análisis completo y la decisión de invertir o no es responsabilidad absoluta de cada usuario, por lo que los resultados de esta herramienta no deben ser considerados por sí mismos una recomendación de inversión.";
+  const fullDisclaimerText = "Estos rangos son guías generales. La interpretación precisa debe considerar la industria y las tendencias históricas de la empresa. El análisis completo y la decisión de invertir o no es responsabilidad absoluta de cada usuario, por lo que los resultados de esta herramienta no deben ser considerados por sí mismos una recomendación de inversión o venta.";
 
   /**
    * Returns the currency symbol based on the selected currency code.
@@ -148,7 +148,7 @@ const App = () => {
 
   /**
    * Formats a date string from 'YYYY-MM-DD' to 'DD-MMM-YYYY'.
-   * @param {string} dateString - The date in 'YYYY-MM-DD' format.
+   * @param {string} dateString - The date in 'DD-MMM-YYYY' format.
    * @returns {string} - The formatted date in 'DD-MMM-YYYY' format.
    */
   const formatDateForDisplay = (dateString) => {
@@ -333,10 +333,12 @@ const App = () => {
    * Handles printing the report using an iframe to ensure content is rendered.
    */
   const handlePrint = () => {
-    const printableContent = document.getElementById('printable-content');
-    
-    if (!printableContent) {
-      console.error('No se encontró el elemento #printable-content para imprimir.');
+    const resultsContent = document.getElementById('printable-content-results'); // Only the results part
+    const ratioGuideContent = document.getElementById('ratio-interpretation-ranges'); // The guide
+    const finalDisclaimerContent = document.getElementById('final-disclaimer-section'); // The final disclaimer
+
+    if (!resultsContent) {
+      console.error('No se encontró el elemento #printable-content-results para imprimir.');
       return;
     }
 
@@ -359,11 +361,14 @@ const App = () => {
       hour12: true
     });
 
-    // We now only copy the innerHTML of #printable-content, which already contains
-    // the ratio guide and final disclaimer.
-    const combinedPrintContent = printableContent.innerHTML;
+    // Construct the content to be printed by explicitly combining parts
+    // Ensure the structure matches the desired output for print
+    let contentToPrint = `
+      ${resultsContent.innerHTML}
+      ${ratioGuideContent ? ratioGuideContent.innerHTML : ''}
+      ${finalDisclaimerContent ? finalDisclaimerContent.innerHTML : ''}
+    `;
 
-    // Copy the combined content to be printed into the iframe
     iframeDoc.open();
     iframeDoc.write(`
       <!DOCTYPE html>
@@ -397,15 +402,20 @@ const App = () => {
             display: none !important;
           }
 
-          #printable-content {
+          /* General styling for printed content */
+          #printable-content-results,
+          #ratio-interpretation-ranges,
+          #final-disclaimer-section {
             width: 100%;
             padding: 0;
             box-shadow: none;
             background-color: white !important;
             color: black !important;
           }
-          /* Universal rule for all elements inside printable-content to ensure visibility and black text */
-          #printable-content * {
+          /* Universal rule for all elements inside printable sections to ensure visibility and black text */
+          #printable-content-results *,
+          #ratio-interpretation-ranges *,
+          #final-disclaimer-section * {
             color: black !important;
             background-color: transparent !important;
             box-shadow: none !important;
@@ -451,7 +461,7 @@ const App = () => {
         </style>
       </head>
       <body>
-        ${combinedPrintContent}
+        ${contentToPrint}
       </body>
       </html>
     `);
@@ -649,7 +659,7 @@ const App = () => {
 
         {/* Display results */}
         {currentRatio !== null && !error && (
-          <div id="printable-content" className="mt-6 p-4 bg-gray-700 rounded-md">
+          <div id="printable-content-results" className="mt-6 p-4 bg-gray-700 rounded-md">
             {/* Logo and Title for Print */}
             <div className="flex justify-center mb-4 print-only">
               <svg width="100" height="100" viewBox="0 0 100 100" className="rounded-full bg-teal-600">
@@ -711,68 +721,6 @@ const App = () => {
             <p className="text-base text-gray-200">
               <span className="font-semibold">Ratio de Deuda a Activos Totales:</span> {debtToAssetsRatio} (Mide el porcentaje de los activos de la empresa que se financian con deuda.) - {debtToAssetsInterpretation}
             </p>
-
-            {/* Ratio Interpretation Ranges - Now always rendered inside printable-content when results are shown */}
-            <div id="ratio-interpretation-ranges" className="mt-8 text-xs text-gray-400 border-t border-gray-700 pt-6">
-              <h3 className="text-sm font-semibold text-teal-300 mb-2">Guía de Interpretación de Ratios:</h3>
-              
-              <div className="mb-4">
-                <h4 className="font-semibold text-gray-300">Ratio de Liquidez:</h4>
-                <ul className="list-disc list-inside ml-2">
-                  <li><span className="font-bold">{'>'} 2.0:</span> Excelente 🚀</li>
-                  <li><span className="font-bold">1.5 - 2.0:</span> Bueno 👍</li>
-                  <li><span className="font-bold">1.0 - 1.5:</span> Regular 😐</li>
-                  <li><span className="font-bold">0.5 - 1.0:</span> Malo 🚩</li>
-                  <li><span className="font-bold">{'<'} 0.5:</span> Pésimo 🚨</li>
-                </ul>
-              </div>
-
-              <div className="mb-4">
-                <h4 className="font-semibold text-gray-300">Ratio de Prueba Ácida:</h4>
-                <ul className="list-disc list-inside ml-2">
-                  <li><span className="font-bold">{'>'} 1.5:</span> Excelente 🚀</li>
-                  <li><span className="font-bold">1.0 - 1.5:</span> Bueno 👍</li>
-                  <li><span className="font-bold">0.7 - 1.0:</span> Regular 😐</li>
-                  <li><span className="font-bold">0.3 - 0.7:</span> Malo 🚩</li>
-                  <li><span className="font-bold">{'<'} 0.3:</span> Pésimo 🚨</li>
-                </ul>
-              </div>
-
-              <div className="mb-4">
-                <h4 className="font-semibold text-gray-300">Ratio de Deuda a Patrimonio Neto:</h4>
-                <ul className="list-disc list-inside ml-2">
-                  <li><span className="font-bold">{'<'} 0.5:</span> Excelente 🚀</li>
-                  <li><span className="font-bold">0.5 - 1.0:</span> Bueno 👍</li>
-                  <li><span className="font-bold">1.0 - 2.0:</span> Regular 😐</li>
-                  <li><span className="font-bold">2.0 - 5.0:</span> Malo 🚩</li>
-                  <li><span className="font-bold">{'>'} 5.0:</span> Pésimo 🚨</li>
-                </ul>
-              </div>
-
-              <div>
-                <h4 className="font-semibold text-gray-300">Ratio de Deuda a Activos Totales:</h4>
-                <ul className="list-disc list-inside ml-2">
-                  <li><span className="font-bold">{'<'} 0.30:</span> Excelente 🚀</li>
-                  <li><span className="font-bold">0.30 - 0.50:</span> Bueno 👍</li>
-                  <li><span className="font-bold">0.50 - 0.70:</span> Regular 😐</li>
-                  <li><span className="font-bold">0.70 - 0.90:</span> Malo 🚩</li>
-                  <li><span className="font-bold">{'>'} 0.90:</span> Pésimo 🚨</li>
-                </ul>
-              </div>
-              <p className="mt-4 text-gray-500">
-                *Nota: Estos rangos son guías generales. La interpretación precisa debe considerar la industria y las tendencias históricas de la empresa.
-              </p>
-            </div>
-
-            {/* Combined Disclaimer and Creator Info at the very end - Now always rendered inside printable-content */}
-            <div id="final-disclaimer-section" className="mt-8 text-xs text-gray-400 text-center final-disclaimer">
-              <p>
-                *{fullDisclaimerText}
-              </p>
-              <p className="mt-2 text-center text-gray-500">
-                © 2025 @Fermoon™
-              </p>
-            </div>
           </div>
         )}
 
@@ -798,8 +746,66 @@ const App = () => {
           </button>
         </div>
 
-        {/* Original Ratio Interpretation Ranges and Final Disclaimer (now removed from here) */}
-        {/* These elements are now directly inside #printable-content when results are shown */}
+        {/* Ratio Interpretation Ranges - Always visible on screen, and explicitly included in print */}
+        <div id="ratio-interpretation-ranges" className="mt-8 text-xs text-gray-400 border-t border-gray-700 pt-6">
+          <h3 className="text-sm font-semibold text-teal-300 mb-2">Guía de Interpretación de Ratios:</h3>
+          
+          <div className="mb-4">
+            <h4 className="font-semibold text-gray-300">Ratio de Liquidez:</h4>
+            <ul className="list-disc list-inside ml-2">
+              <li><span className="font-bold">{'>'} 2.0:</span> Excelente 🚀</li>
+              <li><span className="font-bold">1.5 - 2.0:</span> Bueno 👍</li>
+              <li><span className="font-bold">1.0 - 1.5:</span> Regular 😐</li>
+              <li><span className="font-bold">0.5 - 1.0:</span> Malo 🚩</li>
+              <li><span className="font-bold">{'<'} 0.5:</span> Pésimo 🚨</li>
+            </ul>
+          </div>
+
+          <div className="mb-4">
+            <h4 className="font-semibold text-gray-300">Ratio de Prueba Ácida:</h4>
+            <ul className="list-disc list-inside ml-2">
+              <li><span className="font-bold">{'>'} 1.5:</span> Excelente 🚀</li>
+              <li><span className="font-bold">1.0 - 1.5:</span> Bueno 👍</li>
+              <li><span className="font-bold">0.7 - 1.0:</span> Regular 😐</li>
+              <li><span className="font-bold">0.3 - 0.7:</span> Malo 🚩</li>
+              <li><span className="font-bold">{'<'} 0.3:</span> Pésimo 🚨</li>
+            </ul>
+          </div>
+
+          <div className="mb-4">
+            <h4 className="font-semibold text-gray-300">Ratio de Deuda a Patrimonio Neto:</h4>
+            <ul className="list-disc list-inside ml-2">
+              <li><span className="font-bold">{'<'} 0.5:</span> Excelente 🚀</li>
+              <li><span className="font-bold">0.5 - 1.0:</span> Bueno 👍</li>
+              <li><span className="font-bold">1.0 - 2.0:</span> Regular 😐</li>
+              <li><span className="font-bold">2.0 - 5.0:</span> Malo 🚩</li>
+              <li><span className="font-bold">{'>'} 5.0:</span> Pésimo 🚨</li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-semibold text-gray-300">Ratio de Deuda a Activos Totales:</h4>
+            <ul className="list-disc list-inside ml-2">
+              <li><span className="font-bold">{'<'} 0.30:</span> Excelente 🚀</li>
+              <li><span className="font-bold">0.30 - 0.50:</span> Bueno 👍</li>
+              <li><span className="font-bold">0.50 - 0.70:</span> Regular 😐</li>
+              <li><span className="font-bold">0.70 - 0.90:</span> Malo 🚩</li>
+              <li><span className="font-bold">{'>'} 0.90:</span> Pésimo 🚨</li>
+            </ul>
+          </div>
+          <p className="mt-4 text-gray-500">
+          </p>
+        </div>
+
+        {/* Combined Disclaimer and Creator Info at the very end - Always visible on screen, and explicitly included in print */}
+        <div id="final-disclaimer-section" className="mt-8 text-xs text-gray-400 text-center final-disclaimer">
+          <p>
+            *{fullDisclaimerText}
+          </p>
+          <p className="mt-2 text-center text-gray-500">
+            © 2025 @Fermoon™
+          </p>
+        </div>
       </div>
     </div>
   );
